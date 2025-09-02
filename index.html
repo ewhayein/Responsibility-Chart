@@ -1,0 +1,323 @@
+
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AI 내부통제 모니터링 시스템</title>
+    <link rel="stylesheet" href="index.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <script type="module" src="index.tsx"></script>
+    <script type="importmap">
+    {
+      "imports": {
+        "@google/genai": "https://esm.sh/@google/genai@^1.12.0"
+      }
+    }
+    </script>
+<link rel="stylesheet" href="/index.css">
+</head>
+<body>
+    <div id="app">
+        <nav class="sidebar">
+            <div class="sidebar-header">
+                <h2>AI 내부통제 시스템</h2>
+            </div>
+            <ul class="sidebar-nav">
+                <li><a href="#" class="nav-link active" data-target="dashboard">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+                    <span>메인 대시보드</span>
+                </a></li>
+                <li><a href="#" class="nav-link" data-target="visual-chart">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>
+                    <span>한 눈에 보는 책무구조도</span>
+                </a></li>
+                <li><a href="#" class="nav-link" data-target="text-chart">
+                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><line x1="10" y1="9" x2="8" y2="9"></line></svg>
+                    <span>글로 쓰는 책무구조도</span>
+                </a></li>
+                <li><a href="#" class="nav-link" data-target="security">
+                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+                    <span>보안 사고 탐지</span>
+                </a></li>
+                <li><a href="#" class="nav-link" data-target="mypage">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                    <span>마이페이지</span>
+                </a></li>
+            </ul>
+        </nav>
+        <main class="main-content">
+            <!-- Page: Main Dashboard -->
+            <div id="page-dashboard" class="page active">
+                <div class="page-header">
+                    <h1>메인 대시보드</h1>
+                    <div class="header-actions">
+                        <label for="update-interval">업데이트:</label>
+                        <select id="update-interval" name="update-interval">
+                            <option>12시간</option>
+                            <option selected>하루</option>
+                            <option>일주일</option>
+                            <option>한달</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="dashboard-grid">
+                     <div class="card full-width">
+                        <div class="card-header">
+                            <h3 id="progress-card-title">프로젝트 진척도</h3>
+                             <select id="project-selector" aria-label="프로젝트 선택">
+                                <option value="내부통제 시스템 고도화">내부통제 시스템 고도화</option>
+                                <option value="차세대 AI 엔진 개발">차세대 AI 엔진 개발</option>
+                                <option value="데이터 파이프라인 구축">데이터 파이프라인 구축</option>
+                            </select>
+                        </div>
+                        <div class="progress-container">
+                            <div class="progress-bar-background">
+                                <div id="progress-bar" class="progress-bar-fill"></div>
+                            </div>
+                            <span id="progress-percent" class="progress-label">0%</span>
+                        </div>
+                    </div>
+                    <div class="card full-width">
+                        <h3>최근 보안 알림</h3>
+                        <ul class="activity-list">
+                            <li><span class="tag high">High</span> 비업무 시간대 DB 서버 접근 (사용자: admin_user)</li>
+                            <li><span class="tag medium">Medium</span> '대외비' 문서 접근 권한 없는 사용자 열람 시도 (사용자: dev_kim)</li>
+                            <li><span class="tag low">Low</span> 단시간 내 파일 다운로드 횟수 급증 (사용자: marketing_lee)</li>
+                        </ul>
+                    </div>
+                    <div class="card full-width">
+                        <h3>실시간 책무 구조도: ESG 신용대출 상품</h3>
+                        <div class="ast-chart-container">
+                            <ul class="ast-tree">
+                                <li>
+                                    <div class="ast-node responsibility-high">
+                                        <h4>이사회 (내부통제위원회)</h4>
+                                        <p>최상위 의사결정 기구</p>
+                                    </div>
+                                    <ul>
+                                        <li>
+                                            <div class="ast-node responsibility-high">
+                                                <h4>대표이사 (CEO)</h4>
+                                                <p>지정책임자 총괄책무</p>
+                                            </div>
+                                            <ul>
+                                                <li>
+                                                    <div class="ast-node responsibility-medium">
+                                                        <h4>준법감시인 (CCO)</h4>
+                                                        <p>준법감시 업무</p>
+                                                    </div>
+                                                    <ul>
+                                                        <li>
+                                                            <div class="ast-node responsibility-low">
+                                                                <h4>IT 보안책임 임원 (CIO)</h4>
+                                                                <p>정보보안 업무</p>
+                                                            </div>
+                                                        </li>
+                                                         <li>
+                                                            <div class="ast-node responsibility-low">
+                                                                <h4>신상품개발담당 임원</h4>
+                                                                <p>금융영업 관련 책무</p>
+                                                            </div>
+                                                        </li>
+                                                    </ul>
+                                                </li>
+                                                <li>
+                                                    <div class="ast-node responsibility-medium">
+                                                        <h4>리스크관리책임자 (CRO)</h4>
+                                                        <p>위험관리 업무</p>
+                                                    </div>
+                                                </li>
+                                            </ul>
+                                        </li>
+                                    </ul>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Page: Visual Chart -->
+            <div id="page-visual-chart" class="page">
+                 <div class="page-header"><h1>한 눈에 보는 책무구조도</h1></div>
+                 <div class="split-layout">
+                    <div class="panel">
+                      <textarea id="text-input-visual" placeholder="여기에 분석할 내용을 붙여넣으세요..."></textarea>
+                      <div class="button-group">
+                        <button id="generate-btn-visual">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="btn-icon"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"></path></svg>
+                            <span>차트 생성</span>
+                        </button>
+                        <button id="save-btn-svg" class="secondary-btn">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                            <span>SVG 저장</span>
+                        </button>
+                      </div>
+                    </div>
+                    <div class="panel">
+                      <div id="chart-output-container">
+                        <div id="chart-output">
+                          <div class="placeholder">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>
+                            <p>차트가 여기에 표시됩니다.</p>
+                          </div>
+                        </div>
+                        <div id="loader" class="hidden">
+                          <div class="spinner"></div>
+                          <p>AI가 분석 중입니다...</p>
+                        </div>
+                      </div>
+                    </div>
+                 </div>
+            </div>
+            
+            <!-- Page: Text Chart -->
+            <div id="page-text-chart" class="page">
+                 <div class="page-header"><h1>글로 쓰는 책무구조도</h1></div>
+                 <div class="split-layout">
+                    <div class="panel">
+                      <div class="file-drop-zone" id="file-drop-zone-doc">
+                        <input type="file" id="file-input-doc" accept="image/jpeg,image/png" class="hidden">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="placeholder-icon"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                        <p>차트 이미지(JPG, PNG)를 드래그하거나<br>클릭하여 업로드하세요.</p>
+                        <span id="file-name-doc"></span>
+                      </div>
+                      <div class="button-group">
+                        <button id="generate-btn-doc">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="btn-icon"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"></path></svg>
+                            <span>문서 생성</span>
+                        </button>
+                         <button id="save-btn-txt" class="secondary-btn">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                            <span>TXT 저장</span>
+                        </button>
+                      </div>
+                    </div>
+                    <div class="panel">
+                      <div id="doc-output-container">
+                        <div id="doc-output" class="placeholder">문서가 여기에 표시됩니다.</div>
+                        <div id="loader-doc" class="hidden">
+                            <div class="spinner"></div>
+                            <p>AI가 분석 중입니다...</p>
+                        </div>
+                      </div>
+                    </div>
+                 </div>
+            </div>
+
+            <!-- Page: Security -->
+            <div id="page-security" class="page">
+                <div class="page-header"><h1>보안 사고 탐지</h1></div>
+                <div class="card full-width">
+                    <h3>경고 발생 히스토리</h3>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>발생 시각</th>
+                                    <th>사용자</th>
+                                    <th>행동</th>
+                                    <th>위험도</th>
+                                </tr>
+                            </thead>
+                            <tbody id="security-alert-table-body">
+                                <tr class="clickable-row" data-alert="비업무 시간대 DB 서버 접근 (사용자: admin_user)" data-timestamp="2025-08-15 02:15:33" data-risk="high">
+                                    <td>2025-08-15 02:15:33</td>
+                                    <td>admin_user</td>
+                                    <td>비업무 시간대 DB 서버 접근</td>
+                                    <td><span class="tag high">High</span></td>
+                                </tr>
+                                <tr class="clickable-row" data-alert="'대외비' 문서 접근 권한 없는 사용자 열람 시도 (사용자: dev_kim)" data-timestamp="2025-08-14 14:30:10" data-risk="medium">
+                                    <td>2025-08-14 14:30:10</td>
+                                    <td>dev_kim</td>
+                                    <td>'대외비' 문서 접근 권한 없는 사용자 열람 시도</td>
+                                    <td><span class="tag medium">Medium</span></td>
+                                </tr>
+                                <tr class="clickable-row" data-alert="단시간 내 파일 다운로드 횟수 급증 (사용자: marketing_lee)" data-timestamp="2025-08-14 11:05:48" data-risk="low">
+                                    <td>2025-08-14 11:05:48</td>
+                                    <td>marketing_lee</td>
+                                    <td>단시간 내 파일 다운로드 횟수 급증</td>
+                                    <td><span class="tag low">Low</span></td>
+                                </tr>
+                                 <tr class="clickable-row" data-alert="SQL Injection 시도 탐지 (사용자: anonymous, IP: 203.0.113.45)" data-timestamp="2025-08-13 23:50:01" data-risk="high">
+                                    <td>2025-08-13 23:50:01</td>
+                                    <td>anonymous</td>
+                                    <td>SQL Injection 공격 시도</td>
+                                    <td><span class="tag high">High</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Page: MyPage -->
+            <div id="page-mypage" class="page">
+                <div class="page-header"><h1>마이페이지</h1></div>
+                <div class="mypage-grid">
+                    <div class="card">
+                        <h3>내 정보</h3>
+                        <div class="info-form">
+                            <div><label>이름:</label> <span>홍길동</span></div>
+                            <div><label>부서:</label> <span>내부통제팀</span></div>
+                            <div><label>직책:</label> <span>팀장</span></div>
+                            <div><label>이메일:</label> <span>gildong.hong@company.com</span></div>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <h3>오늘의 할 일</h3>
+                        <ul class="todo-list">
+                            <li><input type="checkbox" id="todo1" checked> <label for="todo1">AI 엔진 성능 보고서 검토</label></li>
+                            <li><input type="checkbox" id="todo2"> <label for="todo2">2분기 보안 감사 준비 회의</label></li>
+                            <li><input type="checkbox" id="todo3"> <label for="todo3">신규 입사자 접근 권한 설정</label></li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h3>직원 인증</h3>
+                        <div class="auth-status">
+                            <span class="status-indicator authenticated"></span>
+                            <span>인증 완료</span>
+                        </div>
+                        <div class="button-group vertical">
+                            <button id="renew-auth-btn">인증 갱신</button>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <h3>계정 관리</h3>
+                        <div class="button-group vertical">
+                            <button id="login-btn">로그인</button>
+                            <button id="logout-btn" class="secondary-btn">로그아웃</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- Security Alert Modal -->
+    <div id="security-alert-modal" class="modal hidden">
+        <div class="modal-overlay"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modal-title">보안 경고 상세 정보</h3>
+                <button id="modal-close-btn" class="close-btn" aria-label="닫기">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="modal-loader" class="hidden">
+                    <div class="spinner"></div>
+                    <p>AI가 경고를 분석하고 있습니다...</p>
+                </div>
+                <div id="modal-alert-details">
+                    <!-- AI-generated content will be inserted here -->
+                </div>
+            </div>
+        </div>
+    </div>
+<script type="module" src="/index.tsx"></script>
+</body>
+</html>

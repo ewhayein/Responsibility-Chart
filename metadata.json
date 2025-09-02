@@ -1,0 +1,5 @@
+{
+  "name": "AI 내부통제 모니터링 시스템",
+  "description": "책무구조도를 실시간으로 모니터링하고 보안 리스크를 조기 탐지하는 AI 기반 대시보드입니다.",
+  "requestFramePermissions": []
+}
